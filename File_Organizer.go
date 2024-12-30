@@ -66,21 +66,21 @@ func create_dir(unsorted string) []string {
 func moveFiles(unsorted string, fileTypes []string) {
 	var moveWg sync.WaitGroup
 
-    filepath.WalkDir(unsorted, func(filePath string, d fs.DirEntry, err error) error {
-        if err != nil {
-            return err
-        }
+	err := filepath.WalkDir(unsorted, func(filePath string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 
-        if d.IsDir() {
-            return nil
-        }
+		if d.IsDir() {
+			return nil
+		}
 
-        fileName := d.Name()
+		fileName := d.Name()
 
-        for _, extFile := range fileTypes {
-            if len(fileName) > len(extFile) && fileName[len(fileName)-len(extFile):] == extFile { // check if file name has correct suffix for extension
+		for _, extFile := range fileTypes {
+			if len(fileName) > len(extFile) && fileName[len(fileName)-len(extFile):] == extFile { // check if file name has correct suffix for extension
 				moveWg.Add(1)
-                go func() {
+				go func() {
 					defer moveWg.Done()
 					dest := filepath.Join(unsorted, extFile, fileName)
 
@@ -98,10 +98,14 @@ func moveFiles(unsorted string, fileTypes []string) {
 						fmt.Printf("Moved %s to %s\n", filePath, dest)
 					}
 				}()
-                return nil
-            }
-        }
-        return nil
-    })
+				return nil
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+        os.Exit(1)
+	}
 	moveWg.Wait()
 }
